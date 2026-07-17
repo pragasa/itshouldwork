@@ -1,0 +1,25 @@
+{
+  "name": "nova-recs-monorepo",
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace frontend run dev",
+    "build:frontend": "npm --workspace frontend run build",
+    "lint:frontend": "npm --workspace frontend run lint",
+    "dev:backend": "npm --workspace backend run dev",
+    "build:backend": "npm --workspace backend run build",
+    "dev:web": "npm --workspace frontend run dev",
+    "build:web": "npm --workspace frontend run build",
+    "lint:web": "npm --workspace frontend run lint",
+    "dev:api": "npm --workspace backend run dev",
+    "build:api": "npm --workspace backend run build",
+    "dev:ml": "python -m uvicorn app.main:app --reload --app-dir services/ml-service",
+    "compose:up": "docker compose up -d",
+    "compose:down": "docker compose down"
+  }
+}

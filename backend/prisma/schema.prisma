@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WatchStatus {
+  watching
+  watched
+  planning
+}
+
+enum BehaviorAction {
+  view
+  click
+  rate
+  add_watchlist
+}
+
+enum RecommendationAlgorithm {
+  collaborative
+  content_based
+  hybrid
+  seasonal
+  trending
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  passwordHash    String        @map("password_hash")
+  oauthProviders  String[]      @default([]) @map("oauth_providers")
+  profilePic      String?       @map("profile_pic")
+  preferences     Json
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  ratings         Rating[]
+  watchlist       Watchlist[]
+  recommendations Recommendation[]
+  behaviors       UserBehavior[]
+  reviews         Review[]
+  followers       UserFollow[]  @relation("following")
+  following       UserFollow[]  @relation("follower")
+}
+
+model Movie {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  posterUrl     String        @map("poster_url")
+  assetsUrl     String?       @map("3d_assets_url")
+  releaseDate   DateTime      @map("release_date")
+  genres        String[]
+  ratings       Json
+  budget        Int?
+  revenue       Int?
+  runtime       Int
+  language      String
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  ratingRows    Rating[]
+  watchlistRows Watchlist[]
+  recommendations Recommendation[]
+  behaviors     UserBehavior[]
+  reviews       Review[]
+  shared        SharedRecommendation[]
+}
+
+model Rating {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  movieId      String   @map("movie_id")
+  rating       Int
+  reviewText   String?  @map("review_text")
+  createdAt    DateTime @default(now()) @map("created_at")
+  helpfulCount Int      @default(0) @map("helpful_count")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie        Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([userId, movieId])
+}
+
+model Watchlist {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  movieId   String      @map("movie_id")
+  addedAt   DateTime    @default(now()) @map("added_at")
+  status    WatchStatus @default(planning)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie       @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+model Recommendation {
+  id             String                    @id @default(cuid())
+  userId         String                    @map("user_id")
+  movieId        String                    @map("movie_id")
+  reason         String
+  algorithmType  RecommendationAlgorithm   @map("algorithm_type")
+  score          Float
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie          Movie                     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([userId, score])
+}
+
+model UserBehavior {
+  id         String         @id @default(cuid())
+  userId     String         @map("user_id")
+  movieId    String         @map("movie_id")
+  actionType BehaviorAction @map("action_type")
+  timestamp  DateTime       @default(now())
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie      Movie          @relation(fields: [movieId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  movieId      String   @map("movie_id")
+  title        String
+  content      String
+  rating       Int
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  helpfulCount Int      @default(0) @map("helpful_count")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie        Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+}
+
+model UserFollow {
+  id           String   @id @default(cuid())
+  followerId   String   @map("follower_id")
+  followingId  String   @map("following_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  follower     User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following    User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model SharedRecommendation {
+  id         String   @id @default(cuid())
+  fromUserId String   @map("from_user_id")
+  toUserId   String   @map("to_user_id")
+  movieId    String   @map("movie_id")
+  message    String
+  createdAt  DateTime @default(now()) @map("created_at")
+  fromUser   User     @relation(fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User     @relation(fields: [toUserId], references: [id], onDelete: Cascade)
+  movie      Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+}
