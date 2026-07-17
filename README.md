@@ -21,3 +21,4 @@ Nova Recs is a monorepo for a movie recommendation platform.
 
 - The frontend currently uses static mock data for the discovery experience.
 - The API and ML service are scaffolded for production integration and can be connected to the backing services and Prisma schema."# itshouldwork" 
+"# itshouldwork" 
